@@ -5,7 +5,9 @@ module Dates (
     dateFromMJD,
     dateFromISO,
     dateFromYMD,
+    isoFromDate,
     ymd,
+    mjd,
     act365) where
 
 import Numeric
@@ -29,13 +31,13 @@ data Date = Date Int deriving (Ord, Eq, Bounded)
 
 -- |Always show dates in short ISO format (yyyymmdd)
 instance Show Date where 
-  show x = printf "%4d%2d%2d" y m d where (y, m, d) = ymd x
+    show x = show (isoFromDate x)
 
 -- |Always read in dates from short ISO format
 instance Read Date where
-  readPrec     = readDate convertDate
-  readListPrec = readListPrecDefault
-  readList     = readListDefault
+    readPrec     = readDate convertDate
+    readListPrec = readListPrecDefault
+    readList     = readListDefault
 
 readDate :: (L.Lexeme -> ReadPrec Date) -> ReadPrec Date
 readDate convert =
@@ -62,15 +64,22 @@ dateFromISO i = dateFromYMD (y, m, d) where
     m = fromIntegral ((i `div` 100) `mod` 100)
     d = fromIntegral (i `mod` 100)
 
+-- |Converts a date into an ISO date, as an integer
+isoFromDate :: Date -> Int
+isoFromDate x = y * 10000 + m * 100 + d where
+    (y, m, d) = ymd x
+
 -- |Converts year month day into a Date. (Formula from wikipedia
 -- |https://en.wikipedia.org/wiki/Julian_day)
 dateFromYMD :: (Int, Int, Int) -> Date
 dateFromYMD (y, m, d) = Date mjd where
+    (/) = quot  -- division rounds towards zero
+    jf = (m - 14) / 12  -- -1 for Jan, Feb otherwise 0
     mjd =
-        (1461 * (y + 4800 + (m - 14) `div` 12)) `div` 4 +
-        (367 * (m - 2 - 12 * ((m - 14) `div` 12))) `div` 12 -
-        (3 * ((y + 4900 + (m - 14) `div` 12) `div` 100)) `div` 4 +
-        d - 32075 - 2400000
+        (1461 * (y + 4800 + jf)) / 4 +
+        (367 * (m - 2 - 12 * jf)) / 12 -
+        (3 * ((y + 4900 + jf) / 100)) / 4 +
+        d - 32075 - 2400001
 
 -- |Converts a date (modified Julian) to year, month and date
 -- |using Edward Graham Richards' algorithm. Works for dates within
@@ -90,15 +99,17 @@ ymd (Date d) =
         b = 274277
         p = 1461
         c = -38
+
+        (/) = quot  -- all division rounds towards zero
     
-        jj = d + 2400000
-        f = jj + j + (((4 * jj + b) `div` 146097) * 3) `div` 4 + c
+        jj = d + 2400001
+        f = jj + j + (((4 * jj + b) / 146097) * 3) / 4 + c
         e = r * f + v
-        g = (e `mod` p) `div` r
+        g = (e `mod` p) / r
         h = u * g + w
-        dd = (h `mod` s) `div` u + 1
-        mm = h `div` s + m `mod` n + 1
-        yy = e `div` p - y + (n + m - mm) `div` n
+        dd = (h `mod` s) / u + 1
+        mm = h / s + m `mod` n + 1
+        yy = e / p - y + (n + m - mm) / n
     in
         (yy, mm, dd)
 
@@ -109,6 +120,10 @@ add_days (Date d) i = Date (d + i)
 -- |Returns the number of days difference between two days (negative if the second is bigger)
 sub :: Date -> Date -> Int
 sub (Date l) (Date r) = (l - r)
+
+-- |Returns the modified julian number of a date
+mjd :: Date -> Int
+mjd (Date d) = d
 
 -- |Calculate a year-fraction represented by the given count of days, using
 -- |the Act365 convention, which assumes every year has 365 days.

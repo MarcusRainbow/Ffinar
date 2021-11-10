@@ -5,4 +5,10 @@ import TestDates
 import Test.HUnit
 
 main :: IO Counts
-main = runTestTT $ TestList [testDateFromYMD]
+main = runTestTT $ TestList [
+    testYMDFromDateEpoch,
+    testDateFromYMDEpoch,
+    testDateFromISOEpoch,
+    testYMDFromDateToday,
+    testDateFromYMDToday,
+    testDateFromISOToday]
