@@ -1,7 +1,9 @@
 module Curves (
     Curve,
     Discount,
-    YieldCurve) where
+    YieldCurve (YieldCurve),
+    interp,
+    interps) where
 
 import Dates
 

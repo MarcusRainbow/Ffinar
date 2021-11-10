@@ -2,13 +2,8 @@
 -- where
 
 import TestDates
+import TestCurves
 import Test.HUnit
 
 main :: IO Counts
-main = runTestTT $ TestList [
-    testYMDFromDateEpoch,
-    testDateFromYMDEpoch,
-    testDateFromISOEpoch,
-    testYMDFromDateToday,
-    testDateFromYMDToday,
-    testDateFromISOToday]
+main = runTestTT $ TestList (datesTests ++ curvesTests)

@@ -1,14 +1,16 @@
-module TestDates (
+module TestDates (datesTests) where
+
+import Test.HUnit
+import Dates
+
+datesTests :: [Test]
+datesTests = [
     testYMDFromDateEpoch,
     testDateFromYMDEpoch,
     testDateFromISOEpoch,
     testYMDFromDateToday,
     testDateFromYMDToday,
-    testDateFromISOToday)
-where
-
-import Test.HUnit
-import Dates
+    testDateFromISOToday]
 
 testYMDFromDateEpoch :: Test
 testYMDFromDateEpoch = 
