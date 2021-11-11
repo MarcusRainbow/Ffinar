@@ -27,6 +27,7 @@ library
   exposed-modules:
       Curves
       Dates
+      Interp
       Lib
   other-modules:
       Paths_Ffinar
@@ -54,6 +55,7 @@ test-suite Ffinar-test
   other-modules:
       TestCurves
       TestDates
+      TestInterp
       Paths_Ffinar
   hs-source-dirs:
       test

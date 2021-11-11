@@ -2,8 +2,9 @@
 -- where
 
 import TestDates
+import TestInterp
 import TestCurves
 import Test.HUnit
 
 main :: IO Counts
-main = runTestTT $ TestList (datesTests ++ curvesTests)
+main = runTestTT $ TestList (datesTests ++ interpTests ++ curvesTests)
