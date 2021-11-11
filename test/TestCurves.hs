@@ -12,7 +12,8 @@ curvesTests = [
     testInterpLastPillar,
     testInterpsFirstLastPillar,
     testInterp,
-    testInterps]
+    testInterps,
+    testInterpMap]
 
 today :: Date
 today = dateFromISO 20211110
@@ -67,11 +68,22 @@ testInterp =
 testInterps :: Test
 testInterps = 
     TestCase $ assertApproxList "testing many points on the rate curve"
-    1e-6 [0.0173, 0.01725, 0.0172, 0.01715]
+    1e-6 [0.0173, 0.0172504, 0.0172, 0.0171695]
     (interps sampleRates [
         (dateFromISO 20230510), 
         (dateFromISO 20230810),
-        (dateFromISO 20231110),
+        (dateFromISO 20231110), 
+        (dateFromISO 20240110)])
+
+-- |Same test as above, but using interp and map
+testInterpMap :: Test
+testInterpMap = 
+    TestCase $ assertApproxList "testing many points on the rate curve one at a time"
+    1e-6 [0.0173, 0.0172504, 0.0172, 0.0171695]
+    (map (interp sampleRates) [
+        (dateFromISO 20230510), 
+        (dateFromISO 20230810),
+        (dateFromISO 20231110), 
         (dateFromISO 20240110)])
 
 assertApprox :: String -> Double -> Double -> Double -> Assertion

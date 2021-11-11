@@ -56,8 +56,8 @@ interps_l _ _ [] = []
 interps_l _ [] _ = error "Cannot extrapolate to the right"
 interps_l cl@(dl, vl) (cr@(dr, vr):cs) ds@(d:ds') = case dr `compare` d of
     LT -> interps_l cr cs ds  -- keep looking
-    EQ -> vr : interps_l cl cs ds'  -- exact match to the right
-    GT -> interp_lr cl cr d : interps_l cl cs ds'  -- found the bracket, so interpolate
+    EQ -> vr : interps_l cl (cr:cs) ds'  -- exact match to the right
+    GT -> interp_lr cl cr d : interps_l cl (cr:cs) ds'  -- found the bracket, so interpolate
 
 -- |Linear interpolator. This needs to be implemented carefully to avoid
 -- |numerical errors. When x == l the result should be exactly a, and when
