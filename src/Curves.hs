@@ -1,6 +1,7 @@
 module Curves (
     Discount,
-    YieldCurve (YieldCurve)) where
+    YieldCurve (YieldCurve),
+    df, dfs, log_df, log_dfs) where
 
 import Dates
 import Interp
