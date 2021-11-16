@@ -1,6 +1,7 @@
 module TestDiscount(discountTests, sampleRateFunction) where
 
 import Test.HUnit
+import Interp
 import Discount
 import Dates
 import TestInterp
@@ -13,14 +14,14 @@ discountTests = [
     testBumpedYields]
 
 sampleRateFunction :: [Date] -> [Rate]
-sampleRateFunction = linearRate sampleRates
+sampleRateFunction = interps sampleRates
 
 sampleYieldCurve :: [Date] -> [LogDf]
-sampleYieldCurve = logDf (dtAct365 today) sampleRateFunction
+sampleYieldCurve = logDf (act365 today) sampleRateFunction
 
 sampleBumpedYieldCurve :: [Date] -> [LogDf]
 sampleBumpedYieldCurve = 
-    logDf (dtAct365 today) (flatBumpRate sampleRateFunction 0.0001)
+    logDf (act365 today) (flatBumpRate sampleRateFunction 0.0001)
 
 testYieldPillars :: Test
 testYieldPillars = 

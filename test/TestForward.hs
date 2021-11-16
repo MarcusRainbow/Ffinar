@@ -38,15 +38,15 @@ sampleDivs = [
     Dividend (dateFromISO 20240510) (dateFromISO 20240513) 3]
 
 sampleForward :: [Date] -> [Fwd]
-sampleForward = fwd (dtAct365 today) sampleRateFunction sampleCostOfCarryFunction sampleSpot
+sampleForward = fwd (act365 today) sampleRateFunction sampleCostOfCarryFunction sampleSpot
 
 sampleEquityForwardNoDivs :: [Date] -> [Fwd]
 sampleEquityForwardNoDivs = 
-    equityFwd (dtAct365 today) sampleRateFunction sampleCostOfCarryFunction sampleSpot []
+    equityFwd (act365 today) sampleRateFunction sampleCostOfCarryFunction sampleSpot []
 
 sampleEquityForward :: [Date] -> [Fwd]
 sampleEquityForward = 
-    equityFwd (dtAct365 today) sampleRateFunction sampleCostOfCarryFunction sampleSpot sampleDivs
+    equityFwd (act365 today) sampleRateFunction sampleCostOfCarryFunction sampleSpot sampleDivs
 
 testForwards :: Test
 testForwards = 

@@ -127,5 +127,5 @@ mjd (Date d) = d
 
 -- |Calculate a year-fraction represented by the given count of days, using
 -- |the Act365 convention, which assumes every year has 365 days.
-act365 :: Int -> Double
-act365 d = (fromIntegral d) / 365
+act365 :: Date -> Date -> Double
+act365 d1 d2 = (fromIntegral (d2 `sub` d1)) / 365

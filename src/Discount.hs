@@ -1,6 +1,6 @@
 module Discount (
     Df, LogDf, Rate, Time,
-    df, logDf, dtAct365, linearRate, flatBumpRate) where
+    df, logDf, flatBumpRate) where
 
 import Dates
 import Interp
@@ -29,14 +29,6 @@ df f d = map exp (f d)
 -- |function and a date to rate function.
 logDf :: (Date -> Time) -> ([Date] -> [Rate]) -> [Date] -> [LogDf]
 logDf ft fr ds = map (\(r, d) -> -r * (ft d)) (zip (fr ds) ds)
-
--- |A date to time function that takes a base date and uses Act365
-dtAct365 :: Date -> Date -> Time
-dtAct365 base date = act365 (date `sub` base)
-
--- |A date to rate function that linearly interpolates in list of points.
-linearRate :: [Point] -> [Date] -> [Rate]
-linearRate = interps
 
 -- |Applies a flat bump to a rate function
 flatBumpRate :: ([Date] -> [Rate]) -> Double -> ([Date] -> [Rate])

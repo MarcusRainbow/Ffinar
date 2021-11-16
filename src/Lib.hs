@@ -3,7 +3,6 @@ module Lib
     ) where
 
 import Dates
-import Curves
 
 someFunc :: IO ()
 someFunc = putStrLn "someFunc"
