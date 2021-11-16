@@ -1,4 +1,4 @@
-module TestDiscount(discountTests) where
+module TestDiscount(discountTests, sampleRateFunction) where
 
 import Test.HUnit
 import Discount
