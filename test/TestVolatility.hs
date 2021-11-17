@@ -1,4 +1,6 @@
-module TestVolatility(volTests) where
+module TestVolatility(
+    volTests,
+    sampleVol) where
 
 import Test.HUnit
 import Discount

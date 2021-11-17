@@ -2,9 +2,9 @@ name:                Ffinar
 version:             0.1.0.0
 github:              "githubuser/Ffinar"
 license:             BSD3
-author:              "Author name here"
-maintainer:          "example@example.com"
-copyright:           "2021 Author name here"
+author:              "Marcus Rainbow"
+maintainer:          "marcus.rainbow@gmail.com"
+copyright:           "2021 Marcus Rainbow"
 
 extra-source-files:
 - README.md
@@ -21,6 +21,8 @@ description:         Please see the README on GitHub at <https://github.com/gith
 
 dependencies:
 - base >= 4.7 && < 5
+- statistics
+- containers
 
 library:
   source-dirs: src
@@ -35,6 +37,7 @@ executables:
     - -with-rtsopts=-N
     dependencies:
     - Ffinar
+    - statistics
 
 tests:
   Ffinar-test:
@@ -47,3 +50,5 @@ tests:
     dependencies:
     - Ffinar
     - HUnit
+    - statistics
+

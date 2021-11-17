@@ -1,4 +1,7 @@
-module TestDiscount(discountTests, sampleRateFunction) where
+module TestDiscount(
+    discountTests, 
+    sampleRateFunction,
+    sampleYieldCurve) where
 
 import Test.HUnit
 import Interp

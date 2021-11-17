@@ -9,9 +9,9 @@ version:        0.1.0.0
 description:    Please see the README on GitHub at <https://github.com/githubuser/Ffinar#readme>
 homepage:       https://github.com/githubuser/Ffinar#readme
 bug-reports:    https://github.com/githubuser/Ffinar/issues
-author:         Author name here
-maintainer:     example@example.com
-copyright:      2021 Author name here
+author:         Marcus Rainbow
+maintainer:     marcus.rainbow@gmail.com
+copyright:      2021 Marcus Rainbow
 license:        BSD3
 license-file:   LICENSE
 build-type:     Simple
@@ -27,9 +27,11 @@ library
   exposed-modules:
       Dates
       Discount
+      European
       Forward
       Interp
       Lib
+      Market
       Volatility
   other-modules:
       Paths_Ffinar
@@ -37,6 +39,8 @@ library
       src
   build-depends:
       base >=4.7 && <5
+    , containers
+    , statistics
   default-language: Haskell2010
 
 executable Ffinar-exe
@@ -49,6 +53,8 @@ executable Ffinar-exe
   build-depends:
       Ffinar
     , base >=4.7 && <5
+    , containers
+    , statistics
   default-language: Haskell2010
 
 test-suite Ffinar-test
@@ -59,6 +65,7 @@ test-suite Ffinar-test
       TestDiscount
       TestForward
       TestInterp
+      TestMarket
       TestVolatility
       Paths_Ffinar
   hs-source-dirs:
@@ -68,4 +75,6 @@ test-suite Ffinar-test
       Ffinar
     , HUnit
     , base >=4.7 && <5
+    , containers
+    , statistics
   default-language: Haskell2010
