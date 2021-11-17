@@ -1,7 +1,9 @@
 module Interp (
     Point,
+    Bracket (LT_EXT, RT_EXT, PILLAR, INTERP),
     interp,
     interps,
+    bracket,
     lerpPoints,
     lerp) where
 
@@ -17,19 +19,11 @@ type Point = (Date, Double)
 -- |Interpolates in the given [Point] to give a value. Extrapolation
 -- |always fails
 interp :: [Point] -> Date -> Double
-interp [] _ = error "Cannot interpolate in an empty [Point]"
-interp (c@(dl, vl):cs) d = case dl `compare` d of
-    LT -> interp_l c cs d
-    EQ -> vl  -- exact match to the left
-    GT -> error "Cannot extrapolate to the left"
-
--- |Interpolates given a left hand value and a list of Points
-interp_l :: Point -> [Point] -> Date -> Double
-interp_l _ [] _ = error "Cannot extrapolate to the right"
-interp_l cl@(dl, vl) (cr@(dr, vr):cs) d = case dr `compare` d of
-    LT -> interp_l cr cs d  -- keep looking
-    EQ -> vr  -- exact match to the right
-    GT -> lerpPoints cl cr d  -- found the bracket, so interpolate
+interp xs d = case bracket (\(d', _) -> d' `compare` d) xs of
+    LT_EXT _      -> error "Cannot extrapolate to the left"
+    RT_EXT _      -> error "Cannot extrapolate to the right"
+    PILLAR (_, v) -> v
+    INTERP l r    -> lerpPoints l r d
 
 -- |Same as interp, but taking a list of dates and returning a list
 -- |of values. If there are many dates looked up, this gives considerable
@@ -66,3 +60,23 @@ lerpPoints (d1, v1) (d2, v2) d =
 -- |term b would be ignored and the result would be zero when x == 1.
 lerp :: Num a => a -> a -> a -> a
 lerp a b x = a * (1 - x) + b * x
+
+-- |The result of trying to bracket a point can be extrapolation to left or
+-- |right, and exact match on a pillar, or interpolation.
+data Bracket a = LT_EXT a | RT_EXT a | PILLAR a | INTERP a a
+
+-- |Try to finds a pair of values that bracket the given value
+bracket :: (a -> Ordering) -> [a] -> Bracket a
+bracket pred [] = error "Cannot bracket an empty list"
+bracket pred (x:xs) = case pred x of
+    LT -> bracket_l pred x xs  -- keep looking to the right
+    EQ -> PILLAR x             -- exact match
+    GT -> LT_EXT x             -- extrapolate left
+
+bracket_l :: (a -> Ordering) -> a -> [a] -> Bracket a
+bracket_l _ x [] = RT_EXT x    -- extrapolate right
+bracket_l pred xl (x:xs) = case pred x of
+    LT -> bracket_l pred x xs  -- keep looking to the right
+    EQ -> PILLAR x             -- exact match
+    GT -> INTERP xl x          -- found the bracket, so interpolate
+

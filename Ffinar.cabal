@@ -30,6 +30,7 @@ library
       Forward
       Interp
       Lib
+      Volatility
   other-modules:
       Paths_Ffinar
   hs-source-dirs:
@@ -58,6 +59,7 @@ test-suite Ffinar-test
       TestDiscount
       TestForward
       TestInterp
+      TestVolatility
       Paths_Ffinar
   hs-source-dirs:
       test

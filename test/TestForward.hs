@@ -1,4 +1,6 @@
-module TestForward(forwardTests) where
+module TestForward(
+    forwardTests,
+    sampleEquityForward) where
 
 import Test.HUnit
 import Discount
