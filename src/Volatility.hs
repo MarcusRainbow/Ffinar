@@ -27,10 +27,10 @@ type Smile = Strike -> Vol
 -- |along the forward.
 vol :: (Date -> Time) -> [(Date, Smile)] -> ([Date] -> [Fwd]) -> Date -> Smile
 vol ft ss ff d = case bracket (\(d', _) -> d' `compare` d) ss of
-    LT_EXT _      -> error "Cannot extrapolate to the left"
-    RT_EXT _      -> error "Cannot extrapolate to the right"
-    PILLAR (_, s) -> s  -- on a pillar date, just return the smile
-    INTERP l r    -> lerpSmile ft ff l r d
+    LT_EXT _          -> error "Cannot extrapolate to the left"
+    RT_EXT _          -> error "Cannot extrapolate to the right"
+    PILLAR ((_, s):_) -> s  -- on a pillar date, just return the smile
+    INTERP (l:r:_)    -> lerpSmile ft ff l r d
 
 -- |Linear interpolate in variance an entire smile. We interpolate along the
 -- |forward, using strikes scaled by sqrt(t)
