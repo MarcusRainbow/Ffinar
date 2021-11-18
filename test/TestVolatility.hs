@@ -16,7 +16,8 @@ volTests :: [Test]
 volTests = [
     testSIV,
     testVolPillar,
-    testVolInterp]
+    testVolInterp,
+    testVolInterp1y]
 
 -- |SIV parameters a, b, rho, m, sigma
 sampleSIV :: [(Date, SIV)]
@@ -67,3 +68,13 @@ testVolInterp =
     0.49995892021337723,0.4080694686846377,0.3285901686679542,
     0.3545080773679434,0.45268319929305467]
     (map (sampleVol (today `add_days` 50)) [90, 95 .. 140])
+
+testVolInterp1y :: Test
+testVolInterp1y = 
+    TestCase $ assertApproxList "Interpolating between smiles at one year gives ..."
+    1e-12 [
+    0.8904273265696886,0.8047276923347503,0.7171835615654877,
+    0.6278506104712193,0.5367803905594342,0.4440210711732766,
+    0.34961879753578035,0.2536244748889143,0.1576818990949708,
+    0.2525263160115035,0.35351593101219825]
+    (map (sampleVol (dateFromISO 20221110)) [90, 95 .. 140])

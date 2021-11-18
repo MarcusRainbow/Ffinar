@@ -63,6 +63,7 @@ test-suite Ffinar-test
   other-modules:
       TestDates
       TestDiscount
+      TestEuropean
       TestForward
       TestInterp
       TestMarket

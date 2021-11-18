@@ -53,24 +53,24 @@ testFindVol =
 testFailDiscount :: Test
 testFailDiscount = 
     TestCase $ assertEqual "Fail to find discount"
-    "Should fail to find discount for GSK.L" (
-        case findVol sampleMarket "GSK.L" of
+    "Failed to find discount for GSK.L" (
+        case findDiscount sampleMarket "GSK.L" of
             Left msg -> msg
             Right _ -> "found discount")
     
 testFailForward :: Test
 testFailForward = 
     TestCase $ assertEqual "Should fail to find forward"
-    "Should fail to find forward for gsk.l" (
-        case findVol sampleMarket "gsk.l" of
+    "Failed to find forward for gsk.l" (
+        case findForward sampleMarket "gsk.l" of
             Left msg -> msg
             Right _ -> "found forward")
     
 testFailVol :: Test
 testFailVol = 
-    TestCase $ assertEqual "Fail to find vol"
-    "Should fail to find vol surface for GSK._" (
-        case findVol sampleMarket "GSK._" of
+    TestCase $ assertEqual "Should fail to find vol"
+    "Failed to find vol surface for GSK.L+" (
+        case findVol sampleMarket "GSK.L+" of
             Left msg -> msg
             Right _ -> "found vol")
         

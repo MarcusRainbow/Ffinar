@@ -1,5 +1,8 @@
 module European (
-    black76Call) where
+    European(European),
+    PutCall(PUT, CALL),
+    black76Call,
+    black76Put) where
 
 import Dates
 import Market
