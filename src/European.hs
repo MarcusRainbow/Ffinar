@@ -33,8 +33,9 @@ black76Put d f v k = (black76Call d f v k) + d * (k - f)
 data European = European {
     putOrCall :: PutCall,
     expiry :: Date,
-    creditEntity :: String,   -- e.g. Currency for a risk-free option
+    creditEntity :: String,      -- e.g. Currency for a risk-free option
     underlying :: String,
+    underlyingEntity :: String,  -- e.g. Currency of the underlying asset
     strike :: Double } deriving (Eq, Show, Read)
 
 -- |Price a European given a discount, forward and vol surface
@@ -46,7 +47,7 @@ priceGivenCurves e valueDate d f v =
         dates = [date]   -- only one date of interest (ignoring settlement)
         discount = head (d dates)
         forward = head (f dates)
-        vol = v date k
+        vol = v f date k
         t = act365 valueDate date
         variance = vol^2 * t
     in
@@ -60,6 +61,6 @@ instance Priceable European where
         let ul = (underlying e)
         let valDate = valueDate m
         discount <- findDiscount m (creditEntity e)
-        forward <- findForward m ul
+        forward <- findEquityForward m ul (underlyingEntity e)
         volSurface <- findVol m ul
         return $ priceGivenCurves e valDate discount forward volSurface

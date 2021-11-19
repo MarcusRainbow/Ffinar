@@ -1,5 +1,6 @@
 module TestVolatility(
     volTests,
+    sampleVolSurface,
     sampleVol) where
 
 import Test.HUnit
@@ -35,9 +36,11 @@ sampleSIV = [
 sampleVolPillars :: [(Date, Smile)]
 sampleVolPillars = sivFactory sampleSIV
 
--- |Sample vol surface
+sampleVolSurface :: ([Date] -> [Fwd]) -> Date -> Smile
+sampleVolSurface = vol (act365 today) sampleVolPillars
+
 sampleVol :: Date -> Smile
-sampleVol = vol (act365 today) sampleVolPillars sampleEquityForward
+sampleVol = sampleVolSurface sampleEquityForward
 
 testSIV :: Test
 testSIV = 

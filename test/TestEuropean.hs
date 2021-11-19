@@ -26,11 +26,11 @@ europeanTests = [
 
 sampleEuropeanCall :: European
 sampleEuropeanCall = 
-    European CALL (dateFromISO 20221110) "GBP" "GSK.L" 120 
+    European CALL (dateFromISO 20221110) "GBP" "GSK.L" "GBP" 120 
 
 sampleEuropeanPut :: European
 sampleEuropeanPut = 
-    European PUT (dateFromISO 20221110) "GBP" "GSK.L" 120 
+    European PUT (dateFromISO 20221110) "GBP" "GSK.L" "GBP" 120 
 
 testBlack76Call :: Test
 testBlack76Call = 

@@ -24,10 +24,12 @@ marketTests = [
     testFailVol]
 
 sampleMarket :: Market
-sampleMarket = marketFactory today d f v where
-    d = [("GBP", sampleYieldCurve)]
-    f = [("GSK.L", sampleEquityForward)]
-    v = [("GSK.L", sampleVol)]
+sampleMarket = marketFactory today s d r c v where
+    s = [("GSK.L", sampleSpot)]
+    d = [("GSK.L", sampleDivs)]
+    r = [("GBP", sampleRateFunction)]
+    c = [("GSK.L", sampleCostOfCarryFunction)]
+    v = [("GSK.L", sampleVolSurface)]
 
 testFindDiscount :: Test
 testFindDiscount = 
@@ -39,7 +41,7 @@ testFindDiscount =
 testFindForward :: Test
 testFindForward = 
     TestCase $ assertApprox "Find forward and match value"
-    1e-12 109.49213655596257 (case findForward sampleMarket "GSK.L" of
+    1e-12 109.49213655596257 (case findEquityForward sampleMarket "GSK.L" "GBP" of
         Left msg -> error msg
         Right forward -> head $ forward [dateFromISO 20240510])
 
@@ -48,12 +50,12 @@ testFindVol =
     TestCase $ assertApprox "Find vol and match value"
     1e-12 1.0636857688602352 (case findVol sampleMarket "GSK.L" of
         Left msg -> error msg
-        Right vol -> vol (today `add_days` 50) 90)
+        Right vol -> vol sampleEquityForward (today `add_days` 50) 90)
 
 testFailDiscount :: Test
 testFailDiscount = 
-    TestCase $ assertEqual "Fail to find discount"
-    "Failed to find discount for GSK.L" (
+    TestCase $ assertEqual "Should fail to find discount"
+    "Failed to find yield curve for GSK.L" (
         case findDiscount sampleMarket "GSK.L" of
             Left msg -> msg
             Right _ -> "found discount")
@@ -61,8 +63,8 @@ testFailDiscount =
 testFailForward :: Test
 testFailForward = 
     TestCase $ assertEqual "Should fail to find forward"
-    "Failed to find forward for gsk.l" (
-        case findForward sampleMarket "gsk.l" of
+    "Failed to find carry curve for gsk.l" (
+        case findEquityForward sampleMarket "gsk.l" "GBP" of
             Left msg -> msg
             Right _ -> "found forward")
     

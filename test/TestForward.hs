@@ -1,6 +1,9 @@
 module TestForward(
     forwardTests,
-    sampleEquityForward) where
+    sampleEquityForward,
+    sampleCostOfCarryFunction,
+    sampleSpot,
+    sampleDivs) where
 
 import Test.HUnit
 import Discount
