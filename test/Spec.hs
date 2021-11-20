@@ -8,6 +8,7 @@ import TestForward
 import TestVolatility
 import TestMarket
 import TestEuropean
+import TestRisks
 import Test.HUnit
 
 main :: IO Counts
@@ -18,4 +19,5 @@ main = runTestTT $ TestList (
     forwardTests ++ 
     volTests ++ 
     marketTests ++ 
-    europeanTests)
+    europeanTests ++
+    riskTests)

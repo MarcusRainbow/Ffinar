@@ -6,15 +6,12 @@ module European (
 
 import Dates
 import Market
+import Instrument
 import Statistics.Distribution
 import Statistics.Distribution.Normal
 
 -- |Enum defining a put (option to sell) or call (option to buy)
 data PutCall = PUT | CALL deriving (Eq, Show, Read)
-
--- -- |Normal distribution with mean = variance = 1
--- unitNormal :: Distribution
--- unitNormal = nor
 
 -- |The 1976 formulation of the Black-Scholes formula for pricing a European
 -- |call option. Parameters discount d, forward f, variance v, strike k, 

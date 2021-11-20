@@ -29,9 +29,11 @@ library
       Discount
       European
       Forward
+      Instrument
       Interp
       Lib
       Market
+      Risks
       Volatility
   other-modules:
       Paths_Ffinar
@@ -67,6 +69,7 @@ test-suite Ffinar-test
       TestForward
       TestInterp
       TestMarket
+      TestRisks
       TestVolatility
       Paths_Ffinar
   hs-source-dirs:

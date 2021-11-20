@@ -1,11 +1,13 @@
 module Market (
     Market(valueDate),
-    Priceable(price),
     Discount,
     Forward,
     VolSurface,
+    Id,
+    BumpSize,
     marketFactory,
     findVol,
+    findSpot,
     findEquityForward,
     findDiscount,
     bumpSpot,
@@ -18,12 +20,12 @@ import Discount
 import Forward
 import Volatility
 
--- public data types
 type VolSurface = ([Date] -> [Fwd]) -> Date -> Strike -> Vol
 type Forward = [Date] -> [Fwd]
 type Discount = [Date] -> [Df]
--- private data types
 type RateCurve = [Date] -> [Rate]
+type BumpSize = Double  -- absolute size of bump
+type Id = String        -- identifier such as credit entity or underlying
 
 -- |The Market contains all the market data needed to price everything.
 -- |In general, we store partially processed data, thus RateCurve rather
@@ -35,22 +37,26 @@ type RateCurve = [Date] -> [Rate]
 -- |the log, recalculating the time to expiry, bumping and exponentiating.
 data Market = Market {
     valueDate :: Date,
-    spots :: Map.Map String Double,
-    dividends :: Map.Map String [Dividend],
-    yieldCurves :: Map.Map String RateCurve,
-    carryCurves :: Map.Map String RateCurve,
-    volSurfaces :: Map.Map String VolSurface }
+    spots :: Map.Map Id Double,
+    dividends :: Map.Map Id [Dividend],
+    yieldCurves :: Map.Map Id RateCurve,
+    carryCurves :: Map.Map Id RateCurve,
+    volSurfaces :: Map.Map Id VolSurface }
 
 -- |Find a discount curve, given the name of the credit entity or currency
-findDiscount :: Market -> String -> Either String Discount
+findDiscount :: Market -> Id -> Either String Discount
 findDiscount market ccy = do
     rates <- find ccy (yieldCurves market) "yield curve"
     let dt = act365 (valueDate market)
     return $ df (logDf dt rates)
 
+-- |Find a spot, given the name of the underlying.
+findSpot :: Market -> Id -> Either String Spot
+findSpot market ul = find ul (spots market) "spot"
+
 -- |Find an equity forward curve, given the name of the underlying and the
 -- |name of the credit entity or currency of the underlying.
-findEquityForward :: Market -> String -> String -> Either String Forward
+findEquityForward :: Market -> Id -> Id -> Either String Forward
 findEquityForward market ul ccy = do
     rates <- find ccy (yieldCurves market) "yield curve"
     carry <- find ul (carryCurves market) "carry curve"
@@ -60,17 +66,17 @@ findEquityForward market ul ccy = do
     return $ equityFwd dt rates carry spot divs
 
 -- |Find a vol surface, given the name of the underlying
-findVol :: Market -> String -> Either String VolSurface
+findVol :: Market -> Id -> Either String VolSurface
 findVol market key = find key (volSurfaces market) "vol surface"
 
 -- |Finds a piece of market data, returning an error if not found
-find :: String -> Map.Map String a -> String -> Either String a 
+find :: Id -> Map.Map Id a -> String -> Either String a 
 find key m msg = case Map.lookup key m of
     Just x -> Right x
     Nothing -> Left ("Failed to find " ++ msg ++ " for " ++ key)
 
 -- |Factory for a Market, given some spots, divs, rate and carry curves and vol smiles
-marketFactory :: Date -> [(String, Spot)] -> [(String, [Dividend])] -> [(String, RateCurve)] -> [(String, RateCurve)] -> [(String, VolSurface)] -> Market
+marketFactory :: Date -> [(Id, Spot)] -> [(Id, [Dividend])] -> [(Id, RateCurve)] -> [(Id, RateCurve)] -> [(Id, VolSurface)] -> Market
 marketFactory date spots divs rates carries vols = Market date s d r c v where
     s = Map.fromList spots
     d = Map.fromList divs
@@ -78,23 +84,18 @@ marketFactory date spots divs rates carries vols = Market date s d r c v where
     c = Map.fromList carries
     v = Map.fromList vols
 
--- |Interface to price an instrument given a market
-class Priceable a where
-    -- |Try to price the given instrument given a market.
-    price :: a -> Market -> Either String Double
-
--- |Bump the spot by a relative amount. This bump uses the default
+-- |Bump the spot by an absolute amount. This bump uses the default
 -- |dynamics for the vol surface -- in other words leaving it alone.
-bumpSpot :: Market -> String -> Double -> Market
-bumpSpot m ul bump = m { spots = spots' } where
-    spots' = Map.adjust (\s -> s * (1 + bump)) ul (spots m)
+bumpSpot :: Id -> BumpSize -> Market -> Market
+bumpSpot ul bump m = m { spots = spots' } where
+    spots' = Map.adjust (\s -> s + bump) ul (spots m)
 
 -- |Bump the rate by an absolute amount, e.g. PV01
-bumpRate :: Market -> String -> Double -> Market
-bumpRate m ccy bump = m { yieldCurves = yieldCurves' } where
+bumpRate :: Id -> BumpSize -> Market -> Market
+bumpRate ccy bump m = m { yieldCurves = yieldCurves' } where
     yieldCurves' = Map.adjust (\r -> flatBumpRate r bump) ccy (yieldCurves m)
 
 -- |Bump the volatility by an absolute amount.
-bumpVol :: Market -> String -> Double -> Market
-bumpVol m ul bump = m { volSurfaces = volSurfaces' } where
+bumpVol :: Id -> BumpSize -> Market -> Market
+bumpVol ul bump m = m { volSurfaces = volSurfaces' } where
     volSurfaces' = Map.adjust (\v -> flatBumpVol v bump) ul (volSurfaces m)

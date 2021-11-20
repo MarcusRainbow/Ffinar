@@ -1,6 +1,7 @@
 module TestEuropean(
     europeanTests,
-    sampleEuropeanCall) where
+    sampleEuropeanCall,
+    sampleEuropeanPut) where
 
 import Test.HUnit
 import Discount
@@ -8,6 +9,7 @@ import Dates
 import Forward
 import Volatility
 import Market
+import Instrument
 import European
 import Interp
 import TestInterp
