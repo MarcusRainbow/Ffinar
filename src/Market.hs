@@ -7,7 +7,10 @@ module Market (
     marketFactory,
     findVol,
     findEquityForward,
-    findDiscount ) where
+    findDiscount,
+    bumpSpot,
+    bumpRate,
+    bumpVol ) where
 
 import qualified Data.Map as Map
 import Dates
@@ -79,3 +82,19 @@ marketFactory date spots divs rates carries vols = Market date s d r c v where
 class Priceable a where
     -- |Try to price the given instrument given a market.
     price :: a -> Market -> Either String Double
+
+-- |Bump the spot by a relative amount. This bump uses the default
+-- |dynamics for the vol surface -- in other words leaving it alone.
+bumpSpot :: Market -> String -> Double -> Market
+bumpSpot m ul bump = m { spots = spots' } where
+    spots' = Map.adjust (\s -> s * (1 + bump)) ul (spots m)
+
+-- |Bump the rate by an absolute amount, e.g. PV01
+bumpRate :: Market -> String -> Double -> Market
+bumpRate m ccy bump = m { yieldCurves = yieldCurves' } where
+    yieldCurves' = Map.adjust (\r -> flatBumpRate r bump) ccy (yieldCurves m)
+
+-- |Bump the volatility by an absolute amount.
+bumpVol :: Market -> String -> Double -> Market
+bumpVol m ul bump = m { volSurfaces = volSurfaces' } where
+    volSurfaces' = Map.adjust (\v -> flatBumpVol v bump) ul (volSurfaces m)

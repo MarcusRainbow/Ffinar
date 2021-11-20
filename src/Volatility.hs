@@ -5,7 +5,8 @@ module Volatility (
     SIV(SIV),
     siv,
     sivFactory,
-    vol) where
+    vol,
+    flatBumpVol) where
 
 import Dates
 import Interp
@@ -74,3 +75,7 @@ siv (SIV (a, b, rho, m, sigma)) k =
 sivFactory :: [(Date, SIV)] -> [(Date, Smile)]
 sivFactory smiles =
     map (\(d, s) -> (d, siv s)) smiles
+
+-- |Decorate a vol surface to add a flat vol
+flatBumpVol :: (([Date] -> [Fwd]) -> Date -> Strike -> Vol) -> Double -> ([Date] -> [Fwd]) -> Date -> Strike -> Vol
+flatBumpVol vol bump = (\f d k -> (vol f d k) + bump)
