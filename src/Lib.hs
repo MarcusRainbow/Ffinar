@@ -1,8 +1,6 @@
 module Lib
-    ( someFunc
+    ( version
     ) where
 
-import Dates
-
-someFunc :: IO ()
-someFunc = putStrLn "someFunc"
+version :: String
+version = "0.0.1"
