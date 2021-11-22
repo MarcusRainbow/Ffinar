@@ -71,6 +71,7 @@ test-suite Ffinar-test
       TestInterp
       TestMarket
       TestRisks
+      TestUtils
       TestVolatility
       Paths_Ffinar
   hs-source-dirs:

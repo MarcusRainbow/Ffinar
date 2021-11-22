@@ -1,6 +1,7 @@
 -- module Spec
 -- where
 
+import TestUtils
 import TestDates
 import TestInterp
 import TestDiscount
@@ -13,6 +14,7 @@ import Test.HUnit
 
 main :: IO Counts
 main = runTestTT $ TestList (
+    utilsTests ++
     datesTests ++
     interpTests ++ 
     discountTests ++
