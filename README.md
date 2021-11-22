@@ -29,8 +29,7 @@ The test files are the main documentation. If you want to calculate risks, look 
 * Create the instrument you want to price (see TestEuropean.hs for an example)
 * Create the market data you want to price it with (see TestDiscount.hs, TestForward.hs and TestVolatility.hs)
 * Create a Market, passing in spots, dividends, carry and rate functions, and vol surfaces (see TestMarket.hs)
-* Creat the risk functions you want, passing the underliers and bump sizes (see TestRisks.hs)
+* Create the risk functions you want, passing the underliers and bump sizes (see TestRisks.hs)
 * Create a Pricer function by invoking _price_ on the instrument
 * For Present Value, pass the Market to the Pricer function
 * For each of the risks, pass the Pricer function and the Market to the risk functions
-
