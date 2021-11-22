@@ -1,0 +1,8 @@
+2021-11-22 16:19:47.837491600000 [$pid(ThreadId 4)] WARNING REQUEST - unsupported request command. {"command":"stepOut","arguments":{"threadId":0},"type":"request","seq":39}
+2021-11-22 16:20:06.800875400000 [$pid(ThreadId 4)] WARNING REQUEST - unsupported request command. {"command":"stepOut","arguments":{"threadId":0},"type":"request","seq":46}
+2021-11-22 16:20:23.347174000000 [$pid(ThreadId 4)] WARNING REQUEST - unsupported request command. {"command":"stepOut","arguments":{"threadId":0},"type":"request","seq":107}
+2021-11-22 16:20:24.529160900000 [$pid(ThreadId 4)] WARNING REQUEST - unsupported request command. {"command":"stepOut","arguments":{"threadId":0},"type":"request","seq":108}
+2021-11-22 16:20:24.549151200000 [$pid(ThreadId 4)] WARNING REQUEST - unsupported request command. {"command":"stepOut","arguments":{"threadId":0},"type":"request","seq":109}
+2021-11-22 16:20:25.465941500000 [$pid(ThreadId 4)] WARNING REQUEST - unsupported request command. {"command":"stepOut","arguments":{"threadId":0},"type":"request","seq":110}
+2021-11-22 16:20:25.634354700000 [$pid(ThreadId 4)] WARNING REQUEST - unsupported request command. {"command":"stepOut","arguments":{"threadId":0},"type":"request","seq":111}
+2021-11-22 16:25:33.625545900000 [$pid(ThreadId 5)] ERROR APP - already at the beginning of the history

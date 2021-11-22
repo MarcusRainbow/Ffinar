@@ -19,11 +19,7 @@ type Point = (Date, Double)
 -- |Interpolates in the given [Point] to give a value. Extrapolation
 -- |always fails
 interp :: [Point] -> Date -> Double
-interp xs d = case bracket (\(d', _) -> d' `compare` d) xs of
-    LT_EXT _           -> error "Cannot extrapolate to the left"
-    RT_EXT _           -> error "Cannot extrapolate to the right"
-    PILLAR ((_, v):_)  -> v
-    INTERP (l:r:_)     -> lerpPoints l r d
+interp xs d = fst (interp' xs d)
 
 -- |Same as interp, but taking a list of dates and returning a list
 -- |of values. If there are many dates looked up, this gives considerable
@@ -32,11 +28,27 @@ interp xs d = case bracket (\(d', _) -> d' `compare` d) xs of
 -- |The dates must be monotonic increasing, though duplicates are allowed.
 interps :: [Point] -> [Date] -> [Double]
 interps _ [] = []
-interps xs (d:ds) = case bracket (\(d', _) -> d' `compare` d) xs of
-    LT_EXT _              -> error "Cannot extrapolate to the left"
-    RT_EXT _              -> error "Cannot extrapolate to the right"
-    PILLAR xs'@((_, v):_) -> v : interps xs' ds
-    INTERP xs'@(l:r:_)    -> lerpPoints l r d : interps xs' ds
+interps xs (d:ds) = let (v, xs') = interp' xs d in
+    v : interps xs' ds
+
+-- |Rolling interpolator. Interpolates the given date in the set of points,
+-- |then returns the result together with a new set of points, excluding any
+-- |unused to the left.
+interp' :: [Point] -> Date -> (Double, [Point])
+interp' xs d = case bracket (\(d', _) -> d' `compare` d) xs of
+    LT_EXT xs'            -> ((leftExtrap xs' d), xs') 
+    RT_EXT xs'            -> ((rightExtrap xs' d), xs')
+    PILLAR xs'@((_, v):_) -> (v, xs')
+    INTERP xs'@(l:r:_)    -> ((lerpPoints l r d), xs')
+
+-- |Handle left extrapolation. Currently we just error unless it
+-- |is zero date, in which case we return zero
+leftExtrap :: [Point] -> Date -> Double
+leftExtrap _ d = if isZeroDate d then 0 else error "Cannot extrapolate to the left"
+
+-- |Handle right extrapolation. Currently we just error
+rightExtrap :: [Point] -> Date -> Double
+rightExtrap _ _ = error "Cannot extrapolate to the right"
 
 -- |Interpolates linearly between two points on a [Point]
 lerpPoints :: Point -> Point -> Date -> Double

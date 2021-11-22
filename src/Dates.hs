@@ -8,6 +8,8 @@ module Dates (
     isoFromDate,
     ymd,
     mjd,
+    zeroDate,
+    isZeroDate,
     act365) where
 
 import Numeric
@@ -112,6 +114,14 @@ ymd (Date d) =
         yy = e / p - y + (n + m - mm) / n
     in
         (yy, mm, dd)
+
+-- |Special date with mjd zero. Used to represent an unset date
+zeroDate :: Date
+zeroDate = dateFromMJD 0
+
+-- |Check for zero date
+isZeroDate :: Date -> Bool
+isZeroDate (Date d) = d == 0
 
 -- |Add a (possibly negative) offset in days to a date
 add_days :: Date -> Int -> Date

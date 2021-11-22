@@ -35,7 +35,8 @@ sampleRates = [
     (today `add_days` 203, 0.0175),    
     (today `add_days` 365, 0.0174),    
     (today `add_days` 730, 0.0172),
-    (today `add_days` 930, 0.0171)] 
+    (today `add_days` 930, 0.0171),
+    (today `add_days` 2000, 0.0170)] 
 
 testInterpPillar :: Test
 testInterpPillar = 

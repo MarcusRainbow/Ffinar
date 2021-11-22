@@ -28,7 +28,7 @@ sampleCostOfCarry = [
     (today `add_days` 202, 0.002),
     (today `add_days` 203, 0.012),
     (today `add_days` 207, 0.002),
-    (today `add_days` 930, 0.002)] 
+    (today `add_days` 2000, 0.002)] 
 
 sampleCostOfCarryFunction :: [Date] -> [Rate]
 sampleCostOfCarryFunction = interps sampleCostOfCarry
@@ -37,10 +37,16 @@ sampleSpot :: Spot
 sampleSpot = 120
 
 sampleDivs :: [Dividend]
-sampleDivs = [
-    Dividend (dateFromISO 20230510) (dateFromISO 20230513) 5,
-    Dividend (dateFromISO 20231110) (dateFromISO 20231113) 7,
-    Dividend (dateFromISO 20240510) (dateFromISO 20240513) 3]
+sampleDivs = let d = dateFromISO in [
+    cashDiv (d 20230510) (d 20230513) 5,
+    cashDiv (d 20231110) (d 20231113) 7,
+    cashDiv (d 20240510) (d 20240513) 3]
+    -- mixDiv  (d 20241110) (d 20241113) (d 20230410) 4 0.01,
+    -- mixDiv  (d 20250510) (d 20250513) (d 20231010) 3 0.01,
+    -- mixDiv  (d 20251110) (d 20251113) (d 20240410) 2 0.015,
+    -- mixDiv  (d 20260510) (d 20260513) (d 20241010) 2 0.015,
+    -- mixDiv  (d 20261110) (d 20261113) (d 20250410) 1 0.02,
+    -- mixDiv  (d 20270510) (d 20270513) (d 20251010) 1 0.02]
 
 sampleForward :: [Date] -> [Fwd]
 sampleForward = fwd (act365 today) sampleRateFunction sampleCostOfCarryFunction sampleSpot
@@ -58,7 +64,7 @@ testForwards =
     TestCase $ assertApproxList "At six month intervals, the forwards are ..."
     1e-12 [
         120.0, 120.88469041993034, 121.86230292737272,
-        122.77827612802493, 123.70401578573441, 124.61681455483054] 
+        122.77827612802493, 123.70401578573441, 124.61681455483054]
     (sampleForward [
         dateFromISO 20211110, dateFromISO 20220510,
         dateFromISO 20221110, dateFromISO 20230510,
