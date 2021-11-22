@@ -32,4 +32,5 @@ The test files are the main documentation. If you want to calculate risks, look 
 * Create the risk functions you want, passing the underliers and bump sizes (see TestRisks.hs)
 * Create a Pricer function by invoking _price_ on the instrument
 * For Present Value, pass the Market to the Pricer function
-* For each of the risks, pass the Pricer function and the Market to the risk functions
+* For each of the risks, pass the Pricer function and the Market to the risk functions (see TestRisks.hs)
+
