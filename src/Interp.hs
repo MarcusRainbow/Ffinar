@@ -1,8 +1,8 @@
 module Interp (
     Point,
-    Bracket (LT_EXT, RT_EXT, PILLAR, INTERP),
-    interp,
-    interps,
+    Bracket (NO_PILLARS, LT_EXT, RT_EXT, PILLAR, INTERP),
+    interp, interps, interp',
+    flatRight, flatRights, flatRight',
     bracket,
     lerpPoints,
     lerp) where
@@ -36,6 +36,7 @@ interps xs (d:ds) = let (v, xs') = interp' xs d in
 -- |unused to the left.
 interp' :: [Point] -> Date -> (Double, [Point])
 interp' xs d = case bracket (\(d', _) -> d' `compare` d) xs of
+    NO_PILLARS            -> error "Cannot interpolate with no points"
     LT_EXT xs'            -> ((leftExtrap xs' d), xs') 
     RT_EXT xs'            -> ((rightExtrap xs' d), xs')
     PILLAR xs'@((_, v):_) -> (v, xs')
@@ -68,11 +69,11 @@ lerp a b x = a * (1 - x) + b * x
 -- |right, and exact match on a pillar, or interpolation. In each case, the
 -- |remainder of the pillars are returned, so the head is used for most of
 -- |these, or the first two items in the case of INTERP.
-data Bracket a = LT_EXT [a] | RT_EXT [a] | PILLAR [a] | INTERP [a]
+data Bracket a = NO_PILLARS | LT_EXT [a] | RT_EXT [a] | PILLAR [a] | INTERP [a]
 
 -- |Try to finds a pair of values that bracket the given value
 bracket :: (a -> Ordering) -> [a] -> Bracket a
-bracket pred [] = error "Cannot bracket an empty list"
+bracket pred [] = NO_PILLARS
 bracket pred xs@(x:xs') = case pred x of
     LT -> bracket_l pred x xs' -- keep looking to the right
     EQ -> PILLAR xs            -- exact match
@@ -85,3 +86,27 @@ bracket_l pred xl xs@(x:xs') = case pred x of
     EQ -> PILLAR xs            -- exact match
     GT -> INTERP (xl:xs)       -- found the bracket, so interpolate
 
+-- |Flat interpolation, rightwards from every pillar. To the left of all
+-- |pillars returns the default.
+flatRight :: Double -> [Point] -> Date -> Double
+flatRight left xs d = fst (flatRight' left xs d)
+
+-- |Same as flatRight, but taking a list of dates and returning a list
+-- |of values. If there are many dates looked up, this gives considerable
+-- |efficiency gains (O(n) rather than O(n^2)).
+-- |
+-- |The dates must be monotonic increasing, though duplicates are allowed.
+flatRights :: Double -> [Point] -> [Date] -> [Double]
+flatRights _ _ [] = []
+flatRights left xs (d:ds) = let (v, xs') = flatRight' left xs d in
+    v : flatRights left xs' ds
+
+-- |Rolling interpolation, rightwards from every pillar. To the left of all
+-- |pillars returns the default.
+flatRight' :: Double -> [Point] -> Date -> (Double, [Point])
+flatRight' left xs d = case bracket (\(d', _) -> d' `compare` d) xs of
+    NO_PILLARS            -> (left, [])
+    LT_EXT xs'            -> (left, xs') 
+    RT_EXT xs'@((_, v):_) -> (v, xs')
+    PILLAR xs'@((_, v):_) -> (v, xs')
+    INTERP xs'@((_, v):_) -> (v, xs')

@@ -64,29 +64,20 @@ equityFwd ::  (Date -> Time) -> ([Date] -> [Rate]) -> ([Date] -> [CostOfCarry]) 
     Spot -> [Dividend] -> [Date] -> [Fwd]
 equityFwd ft fr fq spot divs ds =
     let
-        -- forwards ignoring divs on output dates and div ex/pay dates assuming spot = 1
-        -- also collect forwards excluding divs on rel dates.
-        outFwds = fwd ft fr fq 1 ds
+        -- forwards ignoring divs div ex/pay/rel dates assuming spot = 1
         payFwds = fwd ft fr fq 1 (map payDate divs)
         relFwds = fwd ft fr fq 1 (map relDate divs)
         
-        -- cumulative dividend PVs
+        -- accumulate dividend NPVs then use them to create a flatRight interpolator
         npvDivs = foldlr npvDiv 0 [] (zip3 divs payFwds relFwds) where
             npvDiv div l r = (l + valueDiv div l):r
             valueDiv (div, payFwd, relFwd) npvDivs' =
                 ((cash div) + (rel div) * relFwd * (spot - npvDivs')) / payFwd
-    in
-        equityFwdGivenDivs spot 0 (zip npvDivs divs) (zip outFwds ds)
+        exDates = map exDate divs
 
--- |Calculates a list of equity forwards given the spot, a list of dividends
--- |and their NPVs, and a list of the unadjusted forwards (with spot == 1) and their dates
-equityFwdGivenDivs :: Spot -> Double -> [(Double, Dividend)] -> [(Fwd, Date)] -> [Fwd]
-equityFwdGivenDivs _ _ _ [] = []
-equityFwdGivenDivs spot npv [] fs = map (\(f, _) -> f * (spot - npv)) fs -- no more divs
-equityFwdGivenDivs spot npv divs@((x,div):divs') fs@((f,d):fs') =
-    if (exDate div) > d then
-        -- first div is in the future. Output this forward, then recurse
-        (f * (spot - npv)) : equityFwdGivenDivs spot npv divs fs'
-    else
-        -- first div is before the next date to output. Replace npv and continue
-        equityFwdGivenDivs spot x divs' fs
+        -- forwards and divnpv on requested dates assuming spot = 1
+        outFwds = fwd ft fr fq 1 ds
+        outDivs = flatRights 0 (zip exDates npvDivs) ds
+    in
+        -- now we can calculate the equity forward on the requested dates 
+        map (\(f, d) -> f * (spot - d)) (zip outFwds outDivs)
