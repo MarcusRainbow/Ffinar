@@ -101,7 +101,8 @@ approx tolerance expected actual = abs (actual - expected) < tolerance
 
 assertApproxList :: String -> Double -> [Double] -> [Double] -> Assertion
 assertApproxList preface tolerance expected actual =
-    if all (\(e, a) -> approx tolerance e a) (zip expected actual) then
+    if length expected == length actual &&
+            all (\(e, a) -> approx tolerance e a) (zip expected actual) then
         assertBool preface True -- always succeeds
     else
         assertEqual preface expected actual
