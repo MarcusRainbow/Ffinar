@@ -23,6 +23,8 @@ dependencies:
 - base >= 4.7 && < 5
 - statistics
 - containers
+- deque
+- sort
 
 library:
   source-dirs: src
@@ -38,6 +40,8 @@ executables:
     dependencies:
     - Ffinar
     - statistics
+    - deque
+    - sort
 
 tests:
   Ffinar-test:
@@ -51,4 +55,6 @@ tests:
     - Ffinar
     - HUnit
     - statistics
+    - deque
+    - sort
 

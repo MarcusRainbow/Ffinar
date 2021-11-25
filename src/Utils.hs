@@ -1,4 +1,13 @@
-module Utils (foldlr) where
+module Utils (
+    foldlr,
+    revcat,
+    buffer,
+    approxSort,
+    lazySort) where
+
+import Deque.Lazy as Q
+import Data.Foldable as F
+-- import Debug.Trace
 
 -- |The problem with foldl and scanl is that they are strict in the
 -- |input list. The problem with foldr and scanr is that the function
@@ -13,3 +22,149 @@ foldlr :: (a -> b -> [b] -> [b]) -> b -> [b] -> [a] -> [b]
 foldlr f l r xs =
     let result = foldr (\(l', x) r' -> f x l' r') r (zip (l:result) xs) in
         result
+
+-- sortedMap :: ([a] -> [b]) -> [a] -> [b]
+-- sortedMap f a = unsort i b where
+--     (a', i) = indexSort a
+--     b = f a'
+
+-- indexSort :: (Ord a) => [a] -> ([a], [Int])
+
+-- sortedMerge :: [a] -> [a] -> ([a], [Int])
+
+-- unsort :: [Int] -> [b] -> [b]
+
+-- -- |Merges two roughly sorted lists to produce another
+-- -- |that is exactly sorted. Duplicates are kept.
+-- approxMerge :: (Ord a) => [a] -> [a] -> [a]
+-- approxMerge a b = approxMerge' a b []
+
+-- -- |Same as approxMerge, but also takes a third parameter
+-- -- |which is the elements already output.
+-- approxMerge' :: (Ord a) => [a] -> [a] -> [a] -> [a]
+-- approxMerge a [] _ = sort a  -- maybe worth making nonstrict
+-- approxMerge [] b = sort b  -- ditto
+-- approxMerge as@(a:as') bs@(b:bs') z = case a `compare` b of
+--     LT -> a : approxMerge as' bs
+--     EQ -> a : b : approxMerge as' bs'
+--     GT -> b : approxMerge as bs'
+
+-- -- |Merges two roughly sorted lists to produce another
+-- -- |that is exactly sorted. Duplicates are kept.
+-- approxMergeBy :: (a -> a -> Ordering) -> [a] -> [a] -> [a]
+-- approxMergeBy f a [] = sortBy f a
+-- approxMergeBy f [] b = sortBy f b
+-- approxMergeBy f as@(a:as') bs@(b:bs') = case f a b of
+--     LT -> a : approxMergeBy f as' bs
+--     EQ -> a : b : approxMergeBy f as' bs'
+--     GT -> b : approxMergeBy f as bs'
+
+-- |
+-- Version of lazy sort that never flushes
+approxSort :: (Ord a) => [a] -> [a]
+approxSort = lazySort (\_ _ -> False)
+
+-- |
+-- Non-strictly sorts a list that is already approximately correct. First
+-- argument is a flush function: flush l r. If r - l is large enough, then
+-- flush the output.
+lazySort :: (Ord a) => (a -> a -> Bool) -> [a] -> [a]
+lazySort f a = lazySort' f a sdEmpty
+
+-- |lazy sorts list into an intermediate sorted deque and then into a list
+lazySort' :: (Ord a) => (a -> a -> Bool) -> [a] -> SortedDeque a -> [a]
+lazySort' _ [] d = sdToList d
+lazySort' f (x:xs) d = let (d', o) = sdFlush f x d in
+    revcat o $ lazySort' f xs (sdInsert x d')
+
+-- |
+-- A container that supports rapid sorted insertion so long
+-- as the elements are roughly supported anyway, and also
+-- supports removal of elements from the back. It comprises
+-- a forward-order list followed by a reverse-order deque.
+-- It also holds an output list, which is written to from time
+-- to time.
+--
+-- The idea is that normal order items are prepended to the
+-- reverse-order deque, and they are removed from the back of
+-- that deque in correct order. Incoming out-of-order items
+-- cause items to be taken off the deque and put on the
+-- forward-order holding list until the new item can be inserted
+-- at the head of the deque.
+data SortedDeque a = SD ([a], Q.Deque a) deriving Show
+
+-- |An empty sorted deque
+sdEmpty :: SortedDeque a
+sdEmpty = SD ([], Q.fromConsAndSnocLists [] [])
+
+-- |
+-- Insert an item into a sorted deque. The insertion point between
+-- backward list and forward deque is shuffled until the new item
+-- inserts at the head of the deque. 
+sdInsert :: (Ord a) => a -> SortedDeque a -> SortedDeque a
+sdInsert a d@(SD ([], _)) = sdForwardInsert a d
+sdInsert a d@(SD (xs@(x:xs'), q)) = 
+    -- trace ("sdInsert " ++ show (a, d)) $ 
+    case a `compare` x of
+        LT -> sdForwardInsert a d    -- insert in deq somewhere
+        EQ -> sdPrepend a d          -- insert at start of deq (breaks stable sort)
+        GT -> sdInsert a (SD (xs', Q.cons x q))  -- shuffle and try again
+
+-- |
+-- Here we know that the element to be inserted is greater than anything
+-- in the back list. Insert it somewhere in the forward deque.
+sdForwardInsert :: (Ord a) => a -> SortedDeque a -> SortedDeque a
+sdForwardInsert a d@(SD (xs, q)) = 
+    -- trace ("sdForwardInsert " ++ show (a, d)) $ 
+    case Q.head q of
+        Nothing -> sdPrepend a d    -- start a new deque with the element at the start
+        Just y  -> case a `compare` y of
+            LT  -> sdForwardInsert a (SD (y:xs, Q.tail q))
+            EQ  -> sdPrepend a d    -- insert the element at the start of the deque
+            GT  -> sdPrepend a d    -- ditto
+
+-- |
+-- Prepends an item to the start of the sorted deque
+sdPrepend :: (Ord a) => a -> SortedDeque a -> SortedDeque a
+sdPrepend a (SD (xs, q)) = SD (xs, Q.cons a q)
+
+-- |
+-- if appropriate shifts some items onto the output so there 
+-- is not too much in the deque
+sdFlush :: (Ord a) => (a -> a -> Bool) -> a -> SortedDeque a -> (SortedDeque a, [a])
+sdFlush f a (SD (xs, q)) = 
+    let 
+        rev = Q.reverse q              -- reverse so we can look at the back - O(1)
+        (out, keep) = Q.span (f a) rev
+        keep' = Q.reverse keep         -- reverse what's left in the deque
+        o' = F.toList (Q.reverse out)  -- stuff to put on the output
+    in
+        -- trace ("sdFlush " ++ show (a, (xs, q), keep', o')) $
+        (SD (xs, keep'), o')
+
+-- |
+-- Gets a sorted deque to spill out all its contents as a list
+sdToList :: SortedDeque a -> [a]
+sdToList d@(SD (x, q)) =
+    -- trace ("sdToList " ++ show d) $
+    revcat (F.toList q) x
+
+-- |
+-- Slightly quicker than reverse ++
+revcat :: [a] -> [a] -> [a]
+revcat [] ys = ys
+revcat (x:xs) ys = revcat xs (x:ys)
+
+-- |
+-- Test non-strict evaluation. Copies a list but buffering
+-- it into strict chunks according to some function of the
+-- values.
+buffer :: (a -> Bool) -> [a] -> [a]
+buffer f a = buffer' f a []
+
+-- |Used within the implementation of nonStrict
+buffer' :: (a -> Bool) -> [a] -> [a] -> [a]
+buffer' _ [] b = Prelude.reverse b  -- if input is empty, output the buffer
+buffer' f (a:as) b
+    | f a       = revcat b (buffer' f as [])
+    | otherwise = buffer' f as (a:b)
