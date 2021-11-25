@@ -23,6 +23,12 @@ foldlr f l r xs =
     let result = foldr (\(l', x) r' -> f x l' r') r (zip (l:result) xs) in
         result
 
+-- |
+-- Given a function that maps a sorted list of items, apply that function
+-- to each of a list of approximately sorted lists, to give a list of
+-- results that match exactly with the original lists.
+-- sortedMap :: (a -> a -> Bool) -> ([a] -> [b]) -> [[a]] -> [[b]]
+
 -- sortedMap :: ([a] -> [b]) -> [a] -> [b]
 -- sortedMap f a = unsort i b where
 --     (a', i) = indexSort a
@@ -69,13 +75,19 @@ approxSort = lazySort (\_ _ -> False)
 -- argument is a flush function: flush l r. If r - l is large enough, then
 -- flush the output.
 lazySort :: (Ord a) => (a -> a -> Bool) -> [a] -> [a]
-lazySort f a = lazySort' f a sdEmpty
+lazySort = lazySortBy compare
+
+-- |
+-- Non-strictly sorts a list that is already approximately correct, given a
+-- sorting function.
+lazySortBy :: (a -> a -> Ordering) -> (a -> a -> Bool) -> [a] -> [a]
+lazySortBy c f a = lazySortBy' c f a sdEmpty
 
 -- |lazy sorts list into an intermediate sorted deque and then into a list
-lazySort' :: (Ord a) => (a -> a -> Bool) -> [a] -> SortedDeque a -> [a]
-lazySort' _ [] d = sdToList d
-lazySort' f (x:xs) d = let (d', o) = sdFlush f x d in
-    revcat o $ lazySort' f xs (sdInsert x d')
+lazySortBy' :: (a -> a -> Ordering) -> (a -> a -> Bool) -> [a] -> SortedDeque a -> [a]
+lazySortBy' _ _ [] d = sdToList d
+lazySortBy' c f (x:xs) d = let (d', o) = sdFlush f x d in
+    revcat o $ lazySortBy' c f xs (sdInsert c x d')
 
 -- |
 -- A container that supports rapid sorted insertion so long
@@ -101,37 +113,37 @@ sdEmpty = SD ([], Q.fromConsAndSnocLists [] [])
 -- Insert an item into a sorted deque. The insertion point between
 -- backward list and forward deque is shuffled until the new item
 -- inserts at the head of the deque. 
-sdInsert :: (Ord a) => a -> SortedDeque a -> SortedDeque a
-sdInsert a d@(SD ([], _)) = sdForwardInsert a d
-sdInsert a d@(SD (xs@(x:xs'), q)) = 
+sdInsert :: (a -> a -> Ordering) -> a -> SortedDeque a -> SortedDeque a
+sdInsert c a d@(SD ([], _)) = sdForwardInsert c a d
+sdInsert c a d@(SD (xs@(x:xs'), q)) = 
     -- trace ("sdInsert " ++ show (a, d)) $ 
-    case a `compare` x of
-        LT -> sdForwardInsert a d    -- insert in deq somewhere
-        EQ -> sdPrepend a d          -- insert at start of deq (breaks stable sort)
-        GT -> sdInsert a (SD (xs', Q.cons x q))  -- shuffle and try again
+    case c a x of
+        LT -> sdForwardInsert c a d    -- insert in deq somewhere
+        EQ -> sdPrepend a d            -- insert at start of deq (breaks stable sort)
+        GT -> sdInsert c a (SD (xs', Q.cons x q))  -- shuffle and try again
 
 -- |
 -- Here we know that the element to be inserted is greater than anything
 -- in the back list. Insert it somewhere in the forward deque.
-sdForwardInsert :: (Ord a) => a -> SortedDeque a -> SortedDeque a
-sdForwardInsert a d@(SD (xs, q)) = 
+sdForwardInsert :: (a -> a -> Ordering) -> a -> SortedDeque a -> SortedDeque a
+sdForwardInsert c a d@(SD (xs, q)) = 
     -- trace ("sdForwardInsert " ++ show (a, d)) $ 
     case Q.head q of
         Nothing -> sdPrepend a d    -- start a new deque with the element at the start
-        Just y  -> case a `compare` y of
-            LT  -> sdForwardInsert a (SD (y:xs, Q.tail q))
+        Just y  -> case c a y of
+            LT  -> sdForwardInsert c a (SD (y:xs, Q.tail q))
             EQ  -> sdPrepend a d    -- insert the element at the start of the deque
             GT  -> sdPrepend a d    -- ditto
 
 -- |
 -- Prepends an item to the start of the sorted deque
-sdPrepend :: (Ord a) => a -> SortedDeque a -> SortedDeque a
+sdPrepend :: a -> SortedDeque a -> SortedDeque a
 sdPrepend a (SD (xs, q)) = SD (xs, Q.cons a q)
 
 -- |
 -- if appropriate shifts some items onto the output so there 
 -- is not too much in the deque
-sdFlush :: (Ord a) => (a -> a -> Bool) -> a -> SortedDeque a -> (SortedDeque a, [a])
+sdFlush :: (a -> a -> Bool) -> a -> SortedDeque a -> (SortedDeque a, [a])
 sdFlush f a (SD (xs, q)) = 
     let 
         rev = Q.reverse q              -- reverse so we can look at the back - O(1)
