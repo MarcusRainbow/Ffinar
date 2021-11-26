@@ -3,7 +3,8 @@ module Utils (
     revcat,
     buffer,
     approxSort,
-    lazySort) where
+    lazySort,
+    sortedMap) where
 
 import Deque.Lazy as Q
 import Data.Foldable as F
@@ -25,9 +26,29 @@ foldlr f l r xs =
 
 -- |
 -- Given a function that maps a sorted list of items, apply that function
--- to each of a list of approximately sorted lists, to give a list of
--- results that match exactly with the original lists.
--- sortedMap :: (a -> a -> Bool) -> ([a] -> [b]) -> [[a]] -> [[b]]
+-- to a roughly sorted list, to give a list of
+-- results that match order of the original list. The meaning of rough is
+-- defined by a function that is passed in that says whether two items
+-- differ by too much to count as roughly the same.
+sortedMap :: Ord a => (a -> a -> Bool) -> ([a] -> [b]) -> [a] -> [b]
+sortedMap f m xs = 
+    let
+        -- generate a sorted list of indexed items, then extract a list of items
+        xsi = lazySortBy comp rough (zip xs [0..]) where
+            comp = (\(x,_) (y,_) -> compare x y) 
+            rough = (\(x,_) (y,_) -> f x y) 
+        xs' = map (\(x,i) -> x) xsi
+
+        -- apply the function to the now sorted list
+        ys = m xs'
+
+        -- now reapply the indices and sort into index order
+        ysi = lazySortBy comp rough (zip ys xsi) where
+            comp = (\(_,(_,i)) (_,(_,j)) -> compare i j)
+            rough = (\(_,(x,_)) (_,(y,_)) -> f x y)
+    in
+        -- finally remove the indices (and x values)
+        map (\(y,_) -> y) ysi
 
 -- sortedMap :: ([a] -> [b]) -> [a] -> [b]
 -- sortedMap f a = unsort i b where

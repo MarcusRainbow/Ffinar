@@ -9,7 +9,8 @@ utilsTests = [
     testRunningSum,
     testApproxSort,
     testLazySort,
-    testBuffer]
+    testBuffer,
+    testSortedMap]
 
 runningSum :: Num a => [a] -> [a]
 runningSum xs = foldlr (\x l r -> (x + l):r) 0 [] xs
@@ -31,6 +32,10 @@ sampleApproxSortedList = take 100 sampleApproxSortedInfList
 sampleSortedList :: [Int]
 sampleSortedList = sort sampleApproxSortedList
 
+-- |A roughness definition function that works for the approx sorted lists
+sampleRough :: Int -> Int -> Bool
+sampleRough x y = (x - y) > 5
+
 testApproxSort :: Test
 testApproxSort =
     TestCase $ assertEqual "Sort a finite nearly-sorted list"
@@ -41,10 +46,16 @@ testLazySort :: Test
 testLazySort =
     TestCase $ assertEqual "Sort an infinite nearly-sorted list"
     ([0, 2] ++ [4..101])
-    (take 100 $ lazySort (\x y -> (x - y) > 5) sampleApproxSortedInfList)
+    (take 100 $ lazySort sampleRough sampleApproxSortedInfList)
 
 testBuffer :: Test
 testBuffer = 
     TestCase $ assertEqual "Buffer a partially undefined list into chunks"
     [1, 2, 3]
     (take 3 $ buffer (\x -> x == 4) [1, 2, 3, 4, 5, undefined])
+
+testSortedMap :: Test
+testSortedMap =
+    TestCase $ assertEqual "Apply a function to a nearly-sorted list"
+    (map (*10) sampleApproxSortedList)
+    (sortedMap sampleRough (map (*10)) sampleApproxSortedList)

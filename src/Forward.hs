@@ -65,8 +65,11 @@ equityFwd ::  (Date -> Time) -> ([Date] -> [Rate]) -> ([Date] -> [CostOfCarry]) 
 equityFwd ft fr fq spot divs ds =
     let
         -- forwards ignoring divs div ex/pay/rel dates assuming spot = 1
-        payFwds = fwd ft fr fq 1 (map payDate divs)
-        relFwds = fwd ft fr fq 1 (map relDate divs)
+        -- note that the pay and rel dates are not necessarily sorted in date order
+        fwd' = fwd ft fr fq 1
+        rough x d1 d2 = (d1 `sub` d2) > x -- how much out of order are pay/rel dates?
+        payFwds = sortedMap (rough 5) fwd' (map payDate divs)
+        relFwds = sortedMap (rough 30) fwd' (map relDate divs)
         
         -- accumulate dividend NPVs then use them to create a flatRight interpolator
         npvDivs = foldlr npvDiv 0 [] (zip3 divs payFwds relFwds) where
@@ -76,7 +79,7 @@ equityFwd ft fr fq spot divs ds =
         exDates = map exDate divs
 
         -- forwards and divnpv on requested dates assuming spot = 1
-        outFwds = fwd ft fr fq 1 ds
+        outFwds = fwd' ds
         outDivs = flatRights 0 (zip exDates npvDivs) ds
     in
         -- now we can calculate the equity forward on the requested dates 
