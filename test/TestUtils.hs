@@ -10,7 +10,8 @@ utilsTests = [
     testApproxSort,
     testLazySort,
     testBuffer,
-    testSortedMap]
+    testSortedMap,
+    testSortedMergeUnmerge]
 
 runningSum :: Num a => [a] -> [a]
 runningSum xs = foldlr (\x l r -> (x + l):r) 0 [] xs
@@ -56,6 +57,12 @@ testBuffer =
 
 testSortedMap :: Test
 testSortedMap =
+    TestCase $ assertEqual "Apply a function to a nearly-sorted list"
+    (map (*10) sampleApproxSortedList)
+    (sortedMap sampleRough (map (*10)) sampleApproxSortedList)
+
+testSortedMergeUnmerge :: Test
+testSortedMergeUnmerge =
     TestCase $ assertEqual "Apply a function to a nearly-sorted list"
     (map (*10) sampleApproxSortedList)
     (sortedMap sampleRough (map (*10)) sampleApproxSortedList)

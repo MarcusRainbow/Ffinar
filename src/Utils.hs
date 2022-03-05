@@ -4,6 +4,9 @@ module Utils (
     buffer,
     approxSort,
     lazySort,
+    lazySortBy,
+    mergeBy,
+    unmerge,
     sortedMap) where
 
 import Deque.Lazy as Q
@@ -50,42 +53,44 @@ sortedMap f m xs =
         -- finally remove the indices (and x values)
         map (\(y,_) -> y) ysi
 
--- sortedMap :: ([a] -> [b]) -> [a] -> [b]
--- sortedMap f a = unsort i b where
---     (a', i) = indexSort a
---     b = f a'
+-- |
+-- Given two roughly sorted lists, merge them while remembering
+-- which was which in a separate list
+sortedMerge :: Ord a => [a] -> [a] -> ([a], [Int])
+sortedMerge a b =
+    let
+        a' = zip a (repeat 0)
+        b' = zip b (repeat 1)
+        c = mergeBy (\(x,i) (y,_) -> x `compare` y) a' b'
+    in
+        (map fst c, map snd c)
 
--- indexSort :: (Ord a) => [a] -> ([a], [Int])
+-- |
+-- Same as Data.Lists.mergeBy, except that it works on
+-- not quite ordered input lists.
+mergeBy :: (a -> a -> Ordering) -> [a] -> [a] -> [a]
+mergeBy c [] ys = ys
+mergeBy c xs [] = xs
+mergeBy c xs@(x:xs') ys@(y:ys') = case c x y of
+    LT -> x : mergeBy c xs' ys
+    EQ -> x : mergeBy c xs' ys
+    GT -> y : mergeBy c xs ys'
 
--- sortedMerge :: [a] -> [a] -> ([a], [Int])
+-- |
+-- Given the results from two roughly sorted lists, unmerge them 
+-- back into two lists. Elements where the predicate returns True
+-- go into the first list. Those where it returns False end up
+-- in the second.
+unmerge :: (a -> Bool) -> [a] -> ([a], [a])
+unmerge p xs = foldr unmerger ([], []) xs where
+    unmerger x (xs, ys) = 
+        if p x then
+            (x:xs, ys)
+        else
+            (xs, x:ys)
 
--- unsort :: [Int] -> [b] -> [b]
-
--- -- |Merges two roughly sorted lists to produce another
--- -- |that is exactly sorted. Duplicates are kept.
--- approxMerge :: (Ord a) => [a] -> [a] -> [a]
--- approxMerge a b = approxMerge' a b []
-
--- -- |Same as approxMerge, but also takes a third parameter
--- -- |which is the elements already output.
--- approxMerge' :: (Ord a) => [a] -> [a] -> [a] -> [a]
--- approxMerge a [] _ = sort a  -- maybe worth making nonstrict
--- approxMerge [] b = sort b  -- ditto
--- approxMerge as@(a:as') bs@(b:bs') z = case a `compare` b of
---     LT -> a : approxMerge as' bs
---     EQ -> a : b : approxMerge as' bs'
---     GT -> b : approxMerge as bs'
-
--- -- |Merges two roughly sorted lists to produce another
--- -- |that is exactly sorted. Duplicates are kept.
--- approxMergeBy :: (a -> a -> Ordering) -> [a] -> [a] -> [a]
--- approxMergeBy f a [] = sortBy f a
--- approxMergeBy f [] b = sortBy f b
--- approxMergeBy f as@(a:as') bs@(b:bs') = case f a b of
---     LT -> a : approxMergeBy f as' bs
---     EQ -> a : b : approxMergeBy f as' bs'
---     GT -> b : approxMergeBy f as bs'
-
+-- |
+-- Given a roughly sorted list and a list of 
 -- |
 -- Version of lazy sort that never flushes
 approxSort :: (Ord a) => [a] -> [a]

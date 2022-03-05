@@ -6,3 +6,6 @@
 2021-11-22 16:20:25.465941500000 [$pid(ThreadId 4)] WARNING REQUEST - unsupported request command. {"command":"stepOut","arguments":{"threadId":0},"type":"request","seq":110}
 2021-11-22 16:20:25.634354700000 [$pid(ThreadId 4)] WARNING REQUEST - unsupported request command. {"command":"stepOut","arguments":{"threadId":0},"type":"request","seq":111}
 2021-11-22 16:25:33.625545900000 [$pid(ThreadId 5)] ERROR APP - already at the beginning of the history
+2022-03-05 18:30:36.030997400000 [$pid(ThreadId 5)] ERROR APP - start debugging failed. user error (ExecResult not found.) : Left "user error (ExecResult not found.)"
+2022-03-05 18:32:13.049696400000 [$pid(ThreadId 5)] ERROR APP - start debugging failed. user error (ExecResult not found.) : Left "user error (ExecResult not found.)"
+2022-03-05 18:37:00.392204100000 [$pid(ThreadId 5)] ERROR APP - start debugging failed. user error (ExecResult not found.) : Left "user error (ExecResult not found.)"

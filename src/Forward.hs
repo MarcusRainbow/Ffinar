@@ -8,6 +8,7 @@ import Utils
 import Dates
 import Interp
 import Discount
+import Data.Ord
 import Debug.Trace
 
 -- |A forward is the expected value of some asset at some time in the future.
@@ -67,9 +68,7 @@ equityFwd ft fr fq spot divs ds =
         -- forwards ignoring divs div ex/pay/rel dates assuming spot = 1
         -- note that the pay and rel dates are not necessarily sorted in date order
         fwd' = fwd ft fr fq 1
-        rough x d1 d2 = (d1 `sub` d2) > x -- how much out of order are pay/rel dates?
-        payFwds = sortedMap (rough 5) fwd' (map payDate divs)
-        relFwds = sortedMap (rough 30) fwd' (map relDate divs)
+        (payFwds, relFwds) = divFwds divs fwd'
         
         -- accumulate dividend NPVs then use them to create a flatRight interpolator
         npvDivs = foldlr npvDiv 0 [] (zip3 divs payFwds relFwds) where
@@ -84,3 +83,35 @@ equityFwd ft fr fq spot divs ds =
     in
         -- now we can calculate the equity forward on the requested dates 
         map (\(f, d) -> f * (spot - d)) (zip outFwds outDivs)
+
+-- |
+-- Calculate the forwards needed for dividend calculation, at the relative
+-- and pay dates of all the dividends. (Non-strict calculation, so not
+-- all need be calculated.) This calculation is tricky because the pay dates
+-- are not necessarily in exact date order, and the rel dates are considerably
+-- offset, but it is most efficient to calculate all the forwards in one
+-- call with all the dates in order.
+divFwds :: [Dividend] -> ([Date] -> [Fwd]) -> ([Double], [Double])
+divFwds divs fwd = 
+    let
+        -- pay dates and rel dates decorated by integers in sequence.
+        -- (odd for pay dates and even for rel dates)
+        payDates = zip (map payDate divs) [1,3..]
+        relDates = zip (map relDate divs) [2,4..]
+
+        -- rel dates should be in order, but not pay dates
+        relApprox (d1,_) (d2,_) = (d1 `sub` d2) > 5 -- allow 5 days mismatch
+        payDates' = lazySortBy (comparing fst) relApprox payDates
+
+        -- merge both into one sorted date list and fetch the forwards
+        both = mergeBy (comparing fst) relDates payDates'
+        fwds = zip (fwd (map fst both)) both
+
+        -- split back into two lists (odd for pay, even for rel)
+        (relFwds, payFwds) = unmerge (even.snd.snd) fwds
+
+        -- sort the pay fwds back into the original order
+        payFwds' = lazySortBy (comparing (snd.snd)) approx payFwds where
+            approx = (\(_,x1) (_,x2) -> relApprox x1 x2)
+    in
+        (map fst relFwds, map fst payFwds')
